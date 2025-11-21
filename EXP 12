@@ -1,0 +1,105 @@
+import math
+
+# Define the constants for the game board
+MAXIMIZING_PLAYER = 'O' # The AI player
+MINIMIZING_PLAYER = 'X' # The Human player
+EMPTY = ' '
+
+def check_win(board, player):
+    """Checks if the given player has won."""
+    # Winning combinations (rows, columns, diagonals)
+    winning_combos = [
+        (0, 1, 2), (3, 4, 5), (6, 7, 8), # Rows
+        (0, 3, 6), (1, 4, 7), (2, 5, 8), # Columns
+        (0, 4, 8), (2, 4, 6)             # Diagonals
+    ]
+    for combo in winning_combos:
+        if all(board[i] == player for i in combo):
+            return True
+    return False
+
+def get_available_moves(board):
+    """Returns a list of indices for empty cells."""
+    return [i for i, spot in enumerate(board) if spot == EMPTY]
+
+def minimax(board, depth, is_maximizing):
+    """
+    The core Minimax algorithm: recursively evaluates board states 
+    to find the optimal move, assuming both players play perfectly.
+
+    Args:
+        board (list): The current board state.
+        depth (int): The number of moves made (or remaining).
+        is_maximizing (bool): True if maximizing player (AI), False if minimizing (opponent).
+    
+    Returns:
+        int: The score of the current board state (higher is better for AI).
+    """
+    # --- Base Cases (Terminal States) ---
+    if check_win(board, MAXIMIZING_PLAYER):
+        # AI wins: Assign a high score, prioritizing faster wins (lower depth)
+        return 10 - depth  
+    if check_win(board, MINIMIZING_PLAYER):
+        # Human wins: Assign a low score, penalizing slower losses (higher depth)
+        return depth - 10  
+    if not get_available_moves(board):
+        # Tie: Score is neutral
+        return 0         
+
+    # --- Recursive Cases ---
+    if is_maximizing:
+        best_score = -math.inf
+        player = MAXIMIZING_PLAYER
+        
+        for move in get_available_moves(board):
+            board[move] = player
+            # Recursively call minimax for the minimizing player
+            score = minimax(board, depth + 1, False)
+            board[move] = EMPTY  # Undo move (backtracking)
+            best_score = max(best_score, score)
+        return best_score
+    
+    else: # Minimizing player
+        best_score = math.inf
+        player = MINIMIZING_PLAYER
+        
+        for move in get_available_moves(board):
+            board[move] = player
+            # Recursively call minimax for the maximizing player
+            score = minimax(board, depth + 1, True)
+            board[move] = EMPTY  # Undo move (backtracking)
+            best_score = min(best_score, score)
+        return best_score
+
+def find_best_move(board):
+    """Calculates and returns the best move index for the AI."""
+    best_score = -math.inf
+    best_move = -1
+    
+    # Iterate through all possible first moves
+    for move in get_available_moves(board):
+        board[move] = MAXIMIZING_PLAYER
+        # Start the minimax search assuming the opponent will play next (False)
+        score = minimax(board, 0, False) 
+        board[move] = EMPTY # Undo move
+        
+        if score > best_score:
+            best_score = score
+            best_move = move
+            
+    return best_move
+
+# --- Example Usage ---
+# Example Board State (Human 'X' has just moved, AI 'O' needs to move)
+# [X, E, E]
+# [E, X, E]
+# [E, O, E]
+example_board = ['X', ' ', ' ', ' ', 'X', ' ', ' ', 'O', ' ']
+print(f"Current Board: {example_board}")
+
+optimal_move = find_best_move(example_board)
+
+if optimal_move != -1:
+    print(f"The AI ({MAXIMIZING_PLAYER}) chooses move index: **{optimal_move}**")
+else:
+    print("The game is already over or full.")
