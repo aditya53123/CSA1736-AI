@@ -1,0 +1,103 @@
+import itertools
+import math
+
+# Define the coordinates of the cities
+# Format: {City_Name: (x, y)}
+CITIES = {
+    'A': (0, 0),
+    'B': (1, 3),
+    'C': (4, 1),
+    'D': (5, 4)
+}
+CITY_NAMES = list(CITIES.keys())
+
+def euclidean_distance(city1, city2):
+    """Calculates the Euclidean distance between two cities."""
+    x1, y1 = CITIES[city1]
+    x2, y2 = CITIES[city2]
+    return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def calculate_path_cost(path):
+    """Calculates the total cost (distance) of a given path."""
+    total_cost = 0
+    # Add distance between consecutive cities
+    for i in range(len(path) - 1):
+        total_cost += euclidean_distance(path[i], path[i+1])
+    # Add distance back to the starting city (closing the loop)
+    total_cost += euclidean_distance(path[-1], path[0])
+    return total_cost
+
+# --- 1. Exact Solution (Brute-Force) ---
+
+def tsp_bruteforce(start_city):
+    """
+    Finds the exact minimum cost path by checking all permutations.
+    WARNING: Exponential complexity (N-1)!
+    """
+    other_cities = [city for city in CITY_NAMES if city != start_city]
+    min_cost = float('inf')
+    best_path = []
+    
+    # Iterate through all permutations of the remaining N-1 cities
+    for perm in itertools.permutations(other_cities):
+        current_path = [start_city] + list(perm)
+        cost = calculate_path_cost(current_path)
+        
+        if cost < min_cost:
+            min_cost = cost
+            best_path = current_path
+            
+    # Add start city to the end to close the loop for printing
+    best_path.append(start_city)
+    return best_path, min_cost
+
+# --- 2. Approximate Solution (Nearest Neighbor Heuristic) ---
+
+def tsp_nearest_neighbor(start_city):
+    """
+    Approximation algorithm: always chooses the nearest unvisited city.
+    """
+    path = [start_city]
+    unvisited = set(CITY_NAMES)
+    unvisited.remove(start_city)
+    current_city = start_city
+    
+    while unvisited:
+        min_dist = float('inf')
+        next_city = None
+        
+        # Find the nearest unvisited city
+        for neighbor in unvisited:
+            dist = euclidean_distance(current_city, neighbor)
+            if dist < min_dist:
+                min_dist = dist
+                next_city = neighbor
+                
+        # Move to the nearest city
+        current_city = next_city
+        path.append(current_city)
+        unvisited.remove(current_city)
+        
+    cost = calculate_path_cost(path)
+    # Add start city to the end to close the loop for printing
+    path.append(start_city)
+    return path, cost
+
+# --- Execution ---
+
+START = 'A'
+
+# 1. Brute-Force Solution
+exact_path, exact_cost = tsp_bruteforce(START)
+print("="*45)
+print("1. Exact Solution (Brute-Force)")
+print(f"  Best Path: {' -> '.join(exact_path)}")
+print(f"  Minimum Cost: {exact_cost:.2f}")
+
+print("\n" + "="*45)
+
+# 2. Nearest Neighbor Approximation
+approx_path, approx_cost = tsp_nearest_neighbor(START)
+print("2. Approximate Solution (Nearest Neighbor)")
+print(f"  Path Found: {' -> '.join(approx_path)}")
+print(f"  Total Cost: {approx_cost:.2f}")
