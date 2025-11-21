@@ -1,0 +1,30 @@
+import math
+
+# Define the players and the empty cell marker
+HUMAN = 'X'
+AI = 'O'
+EMPTY = ' '
+
+def print_board(board):
+    """Prints the Tic-Tac-Toe board."""
+    print("-------------")
+    for i in range(3):
+        print(f"| {board[i*3]} | {board[i*3 + 1]} | {board[i*3 + 2]} |")
+        print("-------------")
+
+def check_win(board, player):
+    """Checks if the given player has won."""
+    # Winning combinations (rows, columns, diagonals)
+    winning_combos = [
+        (0, 1, 2), (3, 4, 5), (6, 7, 8), # Rows
+        (0, 3, 6), (1, 4, 7), (2, 5, 8), # Columns
+        (0, 4, 8), (2, 4, 6)             # Diagonals
+    ]
+    for combo in winning_combos:
+        if all(board[i] == player for i in combo):
+            return True
+    return False
+
+def get_available_moves(board):
+    """Returns a list of indices for empty cells."""
+    return [i for i, spot in enumerate(board) if spot == EMPTY]
